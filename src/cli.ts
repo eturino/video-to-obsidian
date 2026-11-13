@@ -1,6 +1,6 @@
 // video-to-obsidian <url> [--out <folder>] [--lang <code>] [--mode native|auto|generate] [--help]
 // Writes one Markdown note with the video's transcript and prints its path.
-import { writeFile } from "node:fs/promises";
+import { stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { Supadata } from "@supadata/js";
@@ -32,6 +32,14 @@ if (!apiKey)
   fail("SUPADATA_API_KEY is missing. Copy .env.template to .env and set it.");
 if (!mode.success) fail(`--mode must be native, auto or generate. ${USAGE}`);
 
+// Checked before any paid call, so a typo in the folder costs no credits.
+const folder = values.out ?? process.env.OBSIDIAN_FOLDER ?? ".";
+if (!(await isFolder(folder))) {
+  fail(
+    `${folder} is not a folder. Create it, or fix --out or OBSIDIAN_FOLDER (~ is not expanded).`,
+  );
+}
+
 const result = await fetchVideo(sdkApi(new Supadata({ apiKey })), url, {
   mode: mode.data,
   lang: values.lang ?? null,
@@ -46,7 +54,6 @@ if (result.warning !== null) {
   );
 }
 
-const folder = values.out ?? process.env.OBSIDIAN_FOLDER ?? ".";
 const path = join(folder, noteFileName(result.video));
 const today = new Date().toISOString().slice(0, "YYYY-MM-DD".length);
 try {
@@ -74,6 +81,17 @@ function parseCliArgs() {
   } catch (error) {
     // an unknown flag or a flag with no value: a usage error, not a crash
     if (error instanceof TypeError) fail(`${error.message}\n${USAGE}`);
+    throw error;
+  }
+}
+
+async function isFolder(candidate: string): Promise<boolean> {
+  try {
+    return (await stat(candidate)).isDirectory();
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
     throw error;
   }
 }
