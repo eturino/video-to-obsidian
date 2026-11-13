@@ -58,18 +58,24 @@ it("leaves out the fields the video does not have", () => {
   assert.doesNotMatch(note, /^(?:platform|author|published):/mu);
 });
 
-it("a third party's title and transcript render as plain text", () => {
-  const note = renderNote(
-    {
-      ...VIDEO,
-      title: "Hi\n```dataviewjs",
-      segments: [{ text: "![[secret]] <img src=x>", offsetMs: 0 }],
-    },
-    "2026-11-13",
-  );
+// A third party's title and transcript: a code block and an embed, if not escaped
+const HOSTILE = renderNote(
+  {
+    ...VIDEO,
+    title: "Hi\n```dataviewjs",
+    segments: [{ text: "![[secret]] <img src=x>", offsetMs: 0 }],
+  },
+  "2026-11-13",
+);
+
+it("a title with a line break stays on one escaped heading line", () => {
+  assert.match(HOSTILE, /^# Hi \\`\\`\\`dataviewjs$/mu);
+});
+
+it("transcript syntax renders as plain text", () => {
   assert.match(
-    note,
-    /^# Hi \\`\\`\\`dataviewjs\n[\s\S]*\*\*\[00:00\]\*\* \\!\\\[\\\[secret\\\]\\\] \\<img src\\=x\\>$/mu,
+    HOSTILE,
+    /^\*\*\[00:00\]\*\* \\!\\\[\\\[secret\\\]\\\] \\<img src\\=x\\>$/mu,
   );
 });
 

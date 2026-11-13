@@ -3,6 +3,7 @@ import { test as it } from "node:test";
 import { SupadataError } from "@supadata/js";
 import {
   type FetchOptions,
+  type FetchResult,
   fetchVideo,
   type VideoApi,
 } from "../src/supadata.ts";
@@ -62,13 +63,16 @@ it("a job that stays queued past the deadline times out", async () => {
   assert.deepEqual(result, { kind: "timeout" });
 });
 
-it("no transcript skips the metadata call", async () => {
+it("a video with no transcript reads as no transcript", async () => {
   const api = fakeApi({ transcript: refusal("transcript-unavailable") });
   const result = await fetchVideo(api, URL, options());
-  assert.deepEqual(
-    { result, calls: api.calls },
-    { result: { kind: "noTranscript" }, calls: ["transcript"] },
-  );
+  assert.deepEqual(result, { kind: "noTranscript" });
+});
+
+it("no transcript skips the metadata call", async () => {
+  const api = fakeApi({ transcript: refusal("transcript-unavailable") });
+  await fetchVideo(api, URL, options());
+  assert.deepEqual(api.calls, ["transcript"]);
 });
 
 it("a spent quota reads as the limit reached", async () => {
@@ -80,13 +84,13 @@ it("a spent quota reads as the limit reached", async () => {
 it("a URL with no metadata keeps the transcript", async () => {
   const api = fakeApi({ metadata: refusal("invalid-request") });
   const result = await fetchVideo(api, URL, options());
-  assert.equal(result.kind === "ok" ? result.video.title : result.kind, null);
+  assert.equal(okResult(result).video.title, null);
 });
 
 it("metadata in a shape it cannot read keeps the note and warns", async () => {
   const api = fakeApi({ metadata: { title: "no platform" } });
   const result = await fetchVideo(api, URL, options());
-  assert.match(result.kind === "ok" ? String(result.warning) : "", /metadata/u);
+  assert.match(String(okResult(result).warning), /metadata/u);
 });
 
 it("a metadata refusal keeps the paid transcript", async () => {
@@ -94,6 +98,13 @@ it("a metadata refusal keeps the paid transcript", async () => {
   const result = await fetchVideo(api, URL, options());
   assert.equal(result.kind, "ok");
 });
+
+// Narrows to the ok result; a failure here means the run did not succeed at all.
+function okResult(result: FetchResult) {
+  // biome-ignore lint/suspicious/noMisplacedAssertion: a narrowing helper, called only inside it()
+  assert.ok(result.kind === "ok", `expected ok, got ${result.kind}`);
+  return result;
+}
 
 interface FakeApi extends VideoApi {
   calls: string[];
