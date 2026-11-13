@@ -1,4 +1,4 @@
-// video-to-obsidian <url> [--out <folder>] [--lang <code>] [--mode native|auto|generate]
+// video-to-obsidian <url> [--out <folder>] [--lang <code>] [--mode native|auto|generate] [--help]
 // Writes one Markdown note with the video's transcript and prints its path.
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -13,18 +13,15 @@ import {
 } from "./supadata.ts";
 
 const USAGE =
-  "Usage: pnpm start <video url> [--out <folder>] [--lang <code>] [--mode native|auto|generate]";
+  "Usage: pnpm start <video url> [--out <folder>] [--lang <code>] [--mode native|auto|generate] [--help]";
 const POLL_MS = 5000;
 const JOB_TIMEOUT_MS = 600_000;
 
-const { values, positionals } = parseArgs({
-  allowPositionals: true,
-  options: {
-    out: { type: "string" },
-    lang: { type: "string" },
-    mode: { type: "string", default: "native" },
-  },
-});
+const { values, positionals } = parseCliArgs();
+if (values.help) {
+  console.log(USAGE);
+  process.exit(0);
+}
 
 const url = positionals[0];
 const apiKey = process.env.SUPADATA_API_KEY;
@@ -62,6 +59,24 @@ try {
   throw error;
 }
 console.log(path);
+
+function parseCliArgs() {
+  try {
+    return parseArgs({
+      allowPositionals: true,
+      options: {
+        out: { type: "string" },
+        lang: { type: "string" },
+        mode: { type: "string", default: "native" },
+        help: { type: "boolean", short: "h" },
+      },
+    });
+  } catch (error) {
+    // an unknown flag or a flag with no value: a usage error, not a crash
+    if (error instanceof TypeError) fail(`${error.message}\n${USAGE}`);
+    throw error;
+  }
+}
 
 function failureText(failure: Exclude<FetchResult, { kind: "ok" }>): string {
   switch (failure.kind) {

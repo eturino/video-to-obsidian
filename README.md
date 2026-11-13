@@ -66,7 +66,7 @@ Then edit `.env`:
 ## Usage
 
 ```sh
-pnpm start <video url> [--out <folder>] [--lang <code>] [--mode native|auto|generate]
+pnpm start <video url> [--out <folder>] [--lang <code>] [--mode native|auto|generate] [--help]
 ```
 
 - `--out`: the folder for this note. It wins over `OBSIDIAN_FOLDER`.
