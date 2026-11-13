@@ -82,7 +82,9 @@ The tool never overwrites a note: if the file already exists, it stops and says 
 ## Credits
 
 A note costs 2 credits with native captions: 1 for the transcript and 1 for the metadata (title,
-author, date). If the video has no transcript, the metadata call is skipped. See
+author, date). If the video has no transcript, the metadata call is skipped. The file name comes from the
+title, so running the same link twice spends 2 credits again before the tool sees the note exists.
+See
 [Supadata pricing](https://supadata.ai/pricing) for generated transcripts.
 
 ## How it works
