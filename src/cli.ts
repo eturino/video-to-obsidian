@@ -62,7 +62,13 @@ if (result.warning !== null) {
 }
 
 const path = join(folder, noteFileName(result.video));
-const today = new Date().toISOString().slice(0, "YYYY-MM-DD".length);
+// The local date: a UTC one is a day off around midnight outside UTC.
+const now = new Date();
+const today = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, "0"),
+  String(now.getDate()).padStart(2, "0"),
+].join("-");
 try {
   // "wx" never overwrites a note that is already in the vault
   await writeFile(path, renderNote(result.video, today), { flag: "wx" });
