@@ -13,6 +13,7 @@ Instagram, X, Facebook and plain video files. It uses the official
 
 I run the same flow inside my personal Telegram bot: I share a video from my phone, and the
 transcript lands in my vault. This repo is that flow cut down to a CLI you can read in five minutes.
+The [tutorial](https://eturino.github.io/video-to-obsidian/) walks through how it is built.
 
 ## Example
 
