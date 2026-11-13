@@ -43,6 +43,11 @@ const result = await fetchVideo(sdkApi(new Supadata({ apiKey })), url, {
   timeoutMs: JOB_TIMEOUT_MS,
 });
 if (result.kind !== "ok") fail(failureText(result));
+if (result.warning !== null) {
+  console.error(
+    `Warning: no metadata, so the note uses the URL as its title (${result.warning}).`,
+  );
+}
 
 const folder = values.out ?? process.env.OBSIDIAN_FOLDER ?? ".";
 const path = join(folder, noteFileName(result.video));

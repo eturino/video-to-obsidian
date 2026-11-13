@@ -10,7 +10,8 @@ export const transcriptModeSchema = z.enum(["native", "auto", "generate"]);
 export type TranscriptMode = z.infer<typeof transcriptModeSchema>;
 
 export type FetchResult =
-  | { kind: "ok"; video: Video }
+  // warning: why the metadata is missing, when it is
+  | { kind: "ok"; video: Video; warning: string | null }
   | { kind: "noTranscript" }
   | { kind: "limitReached" }
   | { kind: "timeout" }
@@ -59,11 +60,10 @@ export async function fetchVideo(
   try {
     const transcript = await transcriptOf(api, url, options);
     if (transcript.kind !== "ok") return transcript;
-    const found = await metadataOf(api, url);
-    if (found.kind === "failed") return found;
-    const meta = found.meta;
+    const { meta, warning } = await metadataOf(api, url);
     return {
       kind: "ok",
+      warning,
       video: {
         url,
         platform: meta?.platform ?? null,
@@ -177,29 +177,24 @@ function segmentsOf(
   return { kind: "ok", lang: transcript.lang, segments };
 }
 
-// The note still works without metadata (a plain video file has none), so an
-// unsupported or unknown URL falls back to the URL as the title.
+// The transcript is already paid for, so a metadata failure costs only the
+// title, author and date: the note is still written, with a warning.
 async function metadataOf(
   api: VideoApi,
   url: string,
-): Promise<
-  | { kind: "ok"; meta: z.infer<typeof metadataSchema> | null }
-  | { kind: "failed"; message: string }
-> {
+): Promise<{
+  meta: z.infer<typeof metadataSchema> | null;
+  warning: string | null;
+}> {
   try {
     const body = await api.metadata(url);
     const parsed = metadataSchema.safeParse(body);
     return parsed.success
-      ? { kind: "ok", meta: parsed.data }
-      : unexpected("metadata", body);
+      ? { meta: parsed.data, warning: null }
+      : { meta: null, warning: unexpected("metadata", body).message };
   } catch (error) {
-    if (
-      error instanceof SupadataError &&
-      (error.error === "invalid-request" || error.error === "not-found")
-    ) {
-      return { kind: "ok", meta: null };
-    }
-    throw error;
+    if (!(error instanceof SupadataError)) throw error;
+    return { meta: null, warning: `${error.error}: ${error.message}` };
   }
 }
 

@@ -25,6 +25,7 @@ it("joins the transcript and the metadata into one video", async () => {
   const result = await fetchVideo(fakeApi({}), URL, options());
   assert.deepEqual(result, {
     kind: "ok",
+    warning: null,
     video: {
       url: URL,
       platform: "youtube",
@@ -80,10 +81,16 @@ it("a URL with no metadata keeps the transcript", async () => {
   assert.equal(result.kind === "ok" ? result.video.title : result.kind, null);
 });
 
-it("metadata in a shape it cannot read fails instead of dropping it", async () => {
+it("metadata in a shape it cannot read keeps the note and warns", async () => {
   const api = fakeApi({ metadata: { title: "no platform" } });
   const result = await fetchVideo(api, URL, options());
-  assert.equal(result.kind, "failed");
+  assert.match(result.kind === "ok" ? String(result.warning) : "", /metadata/u);
+});
+
+it("a metadata refusal keeps the paid transcript", async () => {
+  const api = fakeApi({ metadata: refusal("internal-error") });
+  const result = await fetchVideo(api, URL, options());
+  assert.equal(result.kind, "ok");
 });
 
 interface FakeApi extends VideoApi {
