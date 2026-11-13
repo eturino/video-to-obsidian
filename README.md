@@ -1,6 +1,7 @@
 # video-to-obsidian
 
 [![Powered by Supadata](https://supadata.ai/badge/powered-by-supadata-light.svg)](https://supadata.ai/r/HQV5DNF7)
+[![CI](https://github.com/eturino/video-to-obsidian/actions/workflows/ci.yml/badge.svg)](https://github.com/eturino/video-to-obsidian/actions/workflows/ci.yml)
 
 Turn a video link into an Obsidian note with its full transcript. One command, one Markdown file:
 frontmatter with the title, author, date and source, then the transcript in paragraphs with
