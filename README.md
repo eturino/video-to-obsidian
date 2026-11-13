@@ -17,7 +17,8 @@ transcript lands in my vault. This repo is that flow cut down to a CLI you can r
 ## Example
 
 ```sh
-pnpm start "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+mkdir -p notes
+pnpm start "https://www.youtube.com/watch?v=jNQXAC9IVRw" --out notes
 # notes/Me at the zoo.md
 ```
 
