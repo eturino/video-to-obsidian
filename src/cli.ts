@@ -46,6 +46,13 @@ const result = await fetchVideo(sdkApi(new Supadata({ apiKey })), url, {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   pollMs: POLL_MS,
   timeoutMs: JOB_TIMEOUT_MS,
+}).catch((error: unknown) => {
+  // Node's fetch throws this TypeError when it cannot reach the host
+  if (error instanceof TypeError && error.message === "fetch failed") {
+    const reason = error.cause instanceof Error ? error.cause.message : "";
+    fail(`Could not reach Supadata. Check your connection. ${reason}`.trim());
+  }
+  throw error;
 });
 if (result.kind !== "ok") fail(failureText(result));
 if (result.warning !== null) {
