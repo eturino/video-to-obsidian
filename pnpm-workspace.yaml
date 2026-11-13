@@ -1,0 +1,4 @@
+packages: [.]
+minimumReleaseAge: 7200 # minutes = 5 days; npm supply-chain gate
+# Node 26 runs the .ts files directly; fail on another version instead of at runtime.
+engineStrict: true

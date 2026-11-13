@@ -1,0 +1,25 @@
+{
+  "name": "video-to-obsidian",
+  "version": "0.1.0",
+  "description": "Turn a video link (YouTube, TikTok, Instagram, X) into an Obsidian note with its transcript, using the Supadata SDK.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/cli.ts",
+    "test": "node --test tests/",
+    "lint": "biome check . && tsc"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "@supadata/js": "^1.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.6",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

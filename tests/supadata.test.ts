@@ -1,0 +1,128 @@
+import assert from "node:assert/strict";
+import { test as it } from "node:test";
+import { SupadataError } from "@supadata/js";
+import {
+  type FetchOptions,
+  fetchVideo,
+  type VideoApi,
+} from "../src/supadata.ts";
+
+const URL = "https://youtu.be/abc";
+const TRANSCRIPT = {
+  lang: "en",
+  availableLangs: ["en"],
+  content: [{ text: "Hi.", offset: 1500, duration: 900, lang: "en" }],
+};
+const METADATA = {
+  platform: "youtube",
+  title: "A video",
+  // recorded from YouTube: no username, whatever the SDK type says
+  author: { displayName: "Chef" },
+  createdAt: "2026-01-02T10:00:00Z",
+};
+
+it("joins the transcript and the metadata into one video", async () => {
+  const result = await fetchVideo(fakeApi({}), URL, options());
+  assert.deepEqual(result, {
+    kind: "ok",
+    video: {
+      url: URL,
+      platform: "youtube",
+      title: "A video",
+      author: "Chef",
+      publishedAt: "2026-01-02T10:00:00Z",
+      lang: "en",
+      segments: [{ text: "Hi.", offsetMs: 1500 }],
+    },
+  });
+});
+
+it("polls a transcript job until it completes", async () => {
+  const statuses = [
+    { status: "active" },
+    { status: "completed", result: TRANSCRIPT },
+  ];
+  const api = fakeApi({
+    transcript: { jobId: "j1" },
+    jobStatus: () => statuses.shift(),
+  });
+  const result = await fetchVideo(api, URL, options());
+  assert.equal(result.kind, "ok");
+});
+
+it("a job that never finishes times out", async () => {
+  const api = fakeApi({
+    transcript: { jobId: "j1" },
+    jobStatus: () => ({ status: "queued" }),
+  });
+  const result = await fetchVideo(api, URL, options({ timeoutMs: 0 }));
+  assert.deepEqual(result, { kind: "timeout" });
+});
+
+it("no transcript skips the metadata call", async () => {
+  const api = fakeApi({ transcript: refusal("transcript-unavailable") });
+  const result = await fetchVideo(api, URL, options());
+  assert.deepEqual(
+    { result, calls: api.calls },
+    { result: { kind: "noTranscript" }, calls: ["transcript"] },
+  );
+});
+
+it("a spent quota reads as the limit reached", async () => {
+  const api = fakeApi({ transcript: refusal("limit-exceeded") });
+  const result = await fetchVideo(api, URL, options());
+  assert.deepEqual(result, { kind: "limitReached" });
+});
+
+it("a URL with no metadata keeps the transcript", async () => {
+  const api = fakeApi({ metadata: refusal("invalid-request") });
+  const result = await fetchVideo(api, URL, options());
+  assert.equal(result.kind === "ok" ? result.video.title : result.kind, null);
+});
+
+it("metadata in a shape it cannot read fails instead of dropping it", async () => {
+  const api = fakeApi({ metadata: { title: "no platform" } });
+  const result = await fetchVideo(api, URL, options());
+  assert.equal(result.kind, "failed");
+});
+
+interface FakeApi extends VideoApi {
+  calls: string[];
+}
+
+// A response, or a SupadataError to throw, per call.
+type Reply = unknown;
+
+function fakeApi(replies: {
+  transcript?: Reply;
+  jobStatus?: () => Reply;
+  metadata?: Reply;
+}): FakeApi {
+  const calls: string[] = [];
+  const answer = async (name: string, reply: Reply) => {
+    calls.push(name);
+    if (reply instanceof SupadataError) throw reply;
+    return reply;
+  };
+  return {
+    calls,
+    transcript: () => answer("transcript", replies.transcript ?? TRANSCRIPT),
+    jobStatus: () => answer("jobStatus", replies.jobStatus?.()),
+    metadata: () => answer("metadata", replies.metadata ?? METADATA),
+  };
+}
+
+function refusal(error: SupadataError["error"]): SupadataError {
+  return new SupadataError({ error, message: error, details: "" });
+}
+
+function options(overrides: Partial<FetchOptions> = {}): FetchOptions {
+  return {
+    mode: "native",
+    lang: null,
+    sleep: async () => undefined,
+    pollMs: 0,
+    timeoutMs: 60_000,
+    ...overrides,
+  };
+}

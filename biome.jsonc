@@ -1,0 +1,98 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  // Every rule on. Each exception says why.
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "all",
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      },
+      "style": {
+        // exhaustive switches carry no default
+        "useDefaultSwitchClause": "off",
+        // ternary chains are an exhaustive form TypeScript checks
+        "noTernary": "off",
+        "noNestedTernary": "off",
+        // files put the public interface on top, internals at the bottom
+        "useExportsLast": "off",
+        // Supadata's JSON keeps its wire names
+        "useNamingConvention": "off",
+        // braces everywhere except guard clauses, which this rule cannot tell apart
+        "useBlockStatements": "off",
+        // saves nothing, and renamed reads are clearer as plain property access
+        "useDestructuring": "off",
+        // agreed off: taste, no defect class behind it
+        "noContinue": "off"
+      },
+      "complexity": {
+        // `void p` is how a deliberate fire-and-forget satisfies noFloatingPromises
+        "noVoid": "off"
+      },
+      "correctness": {
+        // browser and framework rules; this is a Node CLI
+        "noNodejsModules": "off",
+        "noProcessGlobal": "off",
+        "useQwikValidLexicalScope": "off"
+      }
+    },
+    "domains": {
+      "types": "all"
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "markdown": {
+    "formatter": { "enabled": false }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // fixtures look like secrets, and expected values are the point of a test.
+      // fakes implement async interfaces without awaiting anything
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "security": { "noSecrets": "off" },
+          "style": { "noMagicNumbers": "off" },
+          "suspicious": { "useAwait": "off" },
+          "performance": { "useTopLevelRegex": "off" }
+        }
+      }
+    },
+    {
+      // the CLI edge: it reads the env and prints the result
+      "includes": ["src/cli.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" },
+          "style": { "noProcessEnv": "off" }
+        }
+      }
+    }
+  ]
+}
