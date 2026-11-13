@@ -116,7 +116,7 @@ A native transcript costs 1 credit and the metadata 1 more, so a typical note co
 ## Third-party text is not trusted
 
 The title and the transcript come from whoever posted the video, and they end up in your vault.
-Obsidian plugins can run code: a `` ```dataviewjs `` block runs JavaScript when Dataview is on. A
+Obsidian plugins can run code: a `dataviewjs` code block runs JavaScript when Dataview is on. A
 title with a line break followed by three backticks would open one. So the title is flattened to
 one line, and Markdown, HTML and Obsidian characters in the title and transcript are escaped:
 
