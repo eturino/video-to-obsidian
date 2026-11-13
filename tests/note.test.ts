@@ -58,6 +58,21 @@ it("leaves out the fields the video does not have", () => {
   assert.doesNotMatch(note, /^(?:platform|author|published):/mu);
 });
 
+it("a third party's title and transcript render as plain text", () => {
+  const note = renderNote(
+    {
+      ...VIDEO,
+      title: "Hi\n```dataviewjs",
+      segments: [{ text: "![[secret]] <img src=x>", offsetMs: 0 }],
+    },
+    "2026-11-13",
+  );
+  assert.match(
+    note,
+    /^# Hi \\`\\`\\`dataviewjs\n[\s\S]*\*\*\[00:00\]\*\* \\!\\\[\\\[secret\\\]\\\] \\<img src\\=x\\>$/mu,
+  );
+});
+
 it("file name drops the characters a path or an Obsidian link cannot hold", () => {
   assert.equal(noteFileName(VIDEO), "How to cook rice a guide.md");
 });

@@ -39,7 +39,7 @@ Source: https://www.youtube.com/watch?v=jNQXAC9IVRw
 
 ## Transcript
 
-**[00:01]** All right, so here we are, in front of the elephants the cool thing about these guys is that they have really... really really long trunks and that's cool (baaaaaaaaaaahhh!!) and that's pretty much all there is to say
+**[00:01]** All right, so here we are, in front of the elephants the cool thing about these guys is that they have really... really really long trunks and that's cool (baaaaaaaaaaahhh\!\!) and that's pretty much all there is to say
 ```
 
 ## Setup
@@ -89,7 +89,9 @@ author, date). If the video has no transcript, the metadata call is skipped. See
   which it polls for up to 10 minutes. Then it fetches the metadata. Every response is checked with
   [zod](https://zod.dev) before it is used, and every Supadata refusal (no transcript, limit
   reached, bad key) becomes a clear message instead of a stack trace.
-- `src/note.ts` renders the note. It is pure, so the tests cover it without the network.
+- `src/note.ts` renders the note. The title and transcript come from whoever posted the video, so
+  Markdown, HTML and Obsidian syntax in them is escaped: a transcript cannot embed a file or start
+  a code block that a plugin runs. It is pure, so the tests cover it without the network.
 - `src/cli.ts` reads the arguments and `.env`, and writes the file.
 
 ## Development

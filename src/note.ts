@@ -31,10 +31,10 @@ export function renderNote(video: Video, savedOn: string): string {
     "---",
   ];
   const paragraphs = paragraphsOf(video.segments).map(
-    (p) => `**[${timestamp(p.offsetMs)}]** ${p.text}`,
+    (p) => `**[${timestamp(p.offsetMs)}]** ${escapeMarkdown(p.text)}`,
   );
   const body = [
-    `# ${displayTitle(video)}`,
+    `# ${escapeMarkdown(displayTitle(video))}`,
     "",
     `Source: ${video.url}`,
     "",
@@ -73,9 +73,17 @@ const SECONDS_PER_HOUR = 3600;
 const PARAGRAPH_MS = 60_000;
 const UNSAFE_FILE_CHARS = /[\\/:*?"<>|#^[\]\p{Cc}]/gu;
 const WHITESPACE = /\s+/gu;
+// Markdown, HTML and Obsidian syntax (embeds, comments, math, tags, block refs)
+const MARKDOWN_CHARS = /[\\`*_[\]<>!$#|~=^%{}]/gu;
 
+// One line: a line break in a third party's title could open a code block that a plugin runs.
 function displayTitle(video: Video): string {
-  return video.title?.trim() || video.url;
+  return (video.title ?? "").replace(WHITESPACE, " ").trim() || video.url;
+}
+
+// Title and transcript come from whoever posted the video, so they render as plain text.
+function escapeMarkdown(text: string): string {
+  return text.replace(MARKDOWN_CHARS, "\\$&");
 }
 
 // JSON strings are valid YAML double-quoted scalars, so no YAML library is needed.
