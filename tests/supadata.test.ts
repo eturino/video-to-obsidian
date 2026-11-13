@@ -51,12 +51,14 @@ it("polls a transcript job until it completes", async () => {
   assert.equal(result.kind, "ok");
 });
 
-it("a job that never finishes times out", async () => {
-  const api = fakeApi({
-    transcript: { jobId: "j1" },
-    jobStatus: () => ({ status: "queued" }),
-  });
-  const result = await fetchVideo(api, URL, options({ timeoutMs: 0 }));
+it("a job that stays queued is polled until the deadline", async () => {
+  const api = queuedJobApi();
+  await fetchVideo(api, URL, clockedOptions());
+  assert.equal(api.calls.filter((c) => c === "jobStatus").length, 3);
+});
+
+it("a job that stays queued past the deadline times out", async () => {
+  const result = await fetchVideo(queuedJobApi(), URL, clockedOptions());
   assert.deepEqual(result, { kind: "timeout" });
 });
 
@@ -123,11 +125,32 @@ function refusal(error: SupadataError["error"]): SupadataError {
   return new SupadataError({ error, message: error, details: "" });
 }
 
+function queuedJobApi(): FakeApi {
+  return fakeApi({
+    transcript: { jobId: "j1" },
+    jobStatus: () => ({ status: "queued" }),
+  });
+}
+
+// A clock that only moves when the code under test sleeps: 10 s polls, 30 s deadline.
+function clockedOptions(): FetchOptions {
+  let clock = 0;
+  return options({
+    now: () => clock,
+    sleep: async (ms) => {
+      clock += ms;
+    },
+    pollMs: 10_000,
+    timeoutMs: 30_000,
+  });
+}
+
 function options(overrides: Partial<FetchOptions> = {}): FetchOptions {
   return {
     mode: "native",
     lang: null,
     sleep: async () => undefined,
+    now: () => 0,
     pollMs: 0,
     timeoutMs: 60_000,
     ...overrides,

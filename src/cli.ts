@@ -44,6 +44,7 @@ const result = await fetchVideo(sdkApi(new Supadata({ apiKey })), url, {
   mode: mode.data,
   lang: values.lang ?? null,
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  now: Date.now,
   pollMs: POLL_MS,
   timeoutMs: JOB_TIMEOUT_MS,
 }).catch((error: unknown) => {

@@ -33,6 +33,7 @@ export interface FetchOptions {
   // null takes the video's own language
   lang: string | null;
   sleep: (ms: number) => Promise<void>;
+  now: () => number;
   pollMs: number;
   timeoutMs: number;
 }
@@ -138,8 +139,8 @@ async function pollJob(
   jobId: string,
   options: FetchOptions,
 ): Promise<TranscriptResult> {
-  const deadline = Date.now() + options.timeoutMs;
-  while (Date.now() < deadline) {
+  const deadline = options.now() + options.timeoutMs;
+  while (options.now() < deadline) {
     // biome-ignore lint/performance/noAwaitInLoops: each poll waits for the previous one
     await options.sleep(options.pollMs);
     const body = await api.jobStatus(jobId);
