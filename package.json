@@ -2,7 +2,21 @@
   "name": "video-to-obsidian",
   "version": "0.1.0",
   "description": "Turn a video link (YouTube, TikTok, Instagram, X) into an Obsidian note with its transcript, using the Supadata SDK.",
+  "keywords": [
+    "supadata",
+    "obsidian",
+    "transcript",
+    "youtube",
+    "tiktok",
+    "instagram",
+    "cli"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eturino/video-to-obsidian.git"
+  },
+  "homepage": "https://github.com/eturino/video-to-obsidian#readme",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.15.0",
